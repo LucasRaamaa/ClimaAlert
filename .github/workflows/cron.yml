@@ -1,0 +1,50 @@
+name: ClimaAlert Cronjob
+
+on:
+  # Descomenta las siguientes dos líneas cuando quieras que se empiece a ejecutar solo:
+  # schedule:
+  #   - cron: '*/15 * * * *'
+  workflow_dispatch:
+    # Esto permite que puedas lanzar el script manualmente desde un botoncito en la web de GitHub
+
+jobs:
+  run-clima-alert:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar el código (Checkout)
+        uses: actions/checkout@v4
+        with:
+          # Importante para que podamos hacer commit del estado luego
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11' 
+          cache: 'pip'
+
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Ejecutar script de ClimaAlert
+        env:
+          # Aquí GitHub inyecta tus contraseñas secretas de forma segura
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          python main.py
+
+      - name: Guardar estado Anti-Spam
+        # GitHub Actions crea un servidor temporal nuevo cada vez. 
+        # Para que el script "recuerde" la última vez que te mandó mensaje, 
+        # hacemos un commit automático del archivo estado.json de vuelta al repositorio.
+        run: |
+          git config --global user.name "ClimaAlert Bot"
+          git config --global user.email "bot@climaalert.com"
+          git add estado.json
+          # Si hubo un cambio en estado.json, se commitea. Si no, ignora y no falla.
+          git commit -m "[Bot] Actualiza estado de alerta" || echo "Sin cambios en el estado"
+          git push
