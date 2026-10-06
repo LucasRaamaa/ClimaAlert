@@ -1,18 +1,20 @@
 import sys
 import asyncio
 import json
+import os
+import time
+from datetime import datetime
 
 # Forzar UTF-8 en la consola de Windows para soportar emojis sin que la app falle
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
-import os
-import time
-from datetime import datetime
+
 from fetcher import fetch_weather_data
 from analyzer import evaluate_weather
 from notifier import send_telegram_alert
 from schemas import AlertLevel
-from config import LOCATIONS
+from config import LOCATIONS, ENABLE_TELEGRAM
+from db import save_weather_record, save_alert_record
 
 STATE_FILE = "estado.json"
 
@@ -46,13 +48,16 @@ async def check_and_notify():
             # 2. Evaluar reglas
             level, reason = evaluate_weather(data)
             
+            # 3. Guardar registro en la BD Supabase
+            save_weather_record(name, lat, lon, data, level, reason)
+            
             if level == AlertLevel.NONE:
                 print(f"[OK] {name}: Tranquilo. Nubosidad: {data.cloud_cover}% | Lluvia (próx 3h): {data.forecast_rain_prob}% | Vientos: {data.wind_direction_text}")
                 # Reiniciamos el estado para esta ubicación
                 state[name] = {"last_alert_level": AlertLevel.NONE.value, "last_alert_time": 0}
                 continue
                 
-            # 3. Lógica Anti-Spam (por ubicación)
+            # 4. Lógica Anti-Spam (por ubicación)
             loc_state = state.get(name, {"last_alert_level": AlertLevel.NONE.value, "last_alert_time": 0})
             last_level = AlertLevel(loc_state["last_alert_level"])
             last_time = loc_state["last_alert_time"]
@@ -71,8 +76,11 @@ async def check_and_notify():
             else:
                 print(f"[Anti-Spam] {name}: Omitiendo notificación (Hace {int(time_diff_minutes)} min se notificó: {last_level.name}).")
                 
-            # 4. Enviar notificación si corresponde
+            # 5. Guardar alerta en BD y enviar notificación si corresponde
             if should_notify:
+                # Guardar el evento de alerta en Supabase
+                save_alert_record(name, lat, lon, level, reason, data, notified_telegram=ENABLE_TELEGRAM)
+                
                 alert_prefix = "🔴 *ALERTA SEVERA*" if level == AlertLevel.SEVERE else "🟠 *ALERTA MODERADA*"
                 message = (
                     f"{alert_prefix}\n\n"

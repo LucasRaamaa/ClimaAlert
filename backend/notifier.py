@@ -1,11 +1,15 @@
 import httpx
-from config import TELEGRAM_TOKEN, TELEGRAM_CHAT_ID
+from config import TELEGRAM_TOKEN, TELEGRAM_CHAT_ID, ENABLE_TELEGRAM
 
 async def send_telegram_alert(message: str):
     """
     Envía un mensaje de alerta a través de Telegram usando el bot.
     """
-    if not TELEGRAM_TOKEN or not TELEGRAM_CHAT_ID:
+    if not ENABLE_TELEGRAM:
+        print("[INFO] Notificaciones por Telegram desactivadas (ENABLE_TELEGRAM=false).")
+        return
+
+    if not TELEGRAM_TOKEN or not TELEGRAM_CHAT_ID or TELEGRAM_TOKEN == "tu_token_aqui":
         print("[ADVERTENCIA] Credenciales de Telegram no configuradas. Omitiendo notificación.")
         return
         
