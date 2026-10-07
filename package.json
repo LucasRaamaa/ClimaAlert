@@ -1,0 +1,14 @@
+{
+  "name": "climaalert",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Sistema de Alertas Meteorológicas & Web Dashboard",
+  "scripts": {
+    "dev": "concurrently -n \"FRONTEND,BACKEND\" -c \"cyan,yellow\" \"npm run dev --prefix frontend\" \"venv\\Scripts\\python.exe backend/main.py\"",
+    "dev:front": "npm run dev --prefix frontend",
+    "dev:back": "venv\\Scripts\\python.exe backend/main.py"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

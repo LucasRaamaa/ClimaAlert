@@ -1,8 +1,17 @@
 # ⛈️ ClimaAlert 2.0 — Sistema de Alertas Meteorológicas & Web Dashboard
 
-**ClimaAlert** es una plataforma integral de monitoreo climático y alertas meteorológicas en tiempo real. 
+Plataforma integral de monitoreo climático y alertas meteorológicas en tiempo real. Utiliza modelos de pronóstico numéricos avanzados (a través de la API gratuita de Open-Meteo), almacena el historial continuo de mediciones y eventos severos en una base de datos **Supabase PostgreSQL**, notifica automáticamente por **Telegram** y ofrece un **Dashboard Web interactivo en React** con previsiones a 24 horas, brújula de vientos y buscador de ubicaciones.
 
-Utiliza modelos de pronóstico numéricos avanzados (a través de la API gratuita de Open-Meteo), almacena el historial continuo de mediciones y eventos severos en una base de datos **Supabase PostgreSQL**, notifica automáticamente por **Telegram** y ofrece un **Dashboard Web interactivo en React** con previsiones a 24 horas y buscador de ubicaciones.
+---
+
+## 🛠️ Tecnologías Utilizadas
+
+- **Backend / Worker**: Python 3, Pydantic, HTTPX, Schedule.
+- **Frontend / Dashboard**: React 18, Vite, Lucide React icons, CSS3 Glassmorphism UI.
+- **Base de Datos & Backend-as-a-Service**: Supabase (PostgreSQL con RLS).
+- **API Meteorológica**: Open-Meteo API (Pronóstico numérico y geocodificación en tiempo real).
+- **Notificaciones**: Bot API de Telegram.
+- **Automatización**: Concurrently para desarrollo local y GitHub Actions para ejecuciones programadas (CRON).
 
 ---
 
@@ -10,103 +19,179 @@ Utiliza modelos de pronóstico numéricos avanzados (a través de la API gratuit
 
 ```text
 ClimaAlert/
+├── package.json              # Script raíz para ejecución simultánea (concurrently)
+├── start.bat                 # Lanzador automático de un clic para Windows
+├── supabase_schema.sql       # Script SQL para tablas, índices y políticas RLS
+├── PLANIFICACION_WEB.md      # Planificación de fases y hoja de ruta
+│
 ├── backend/                  # 🐍 Backend & Worker en Python
-│   ├── main.py               # Ejecutor principal de monitoreo
-│   ├── db.py                 # Conector y persistencia en Supabase
+│   ├── main.py               # Ejecutor principal del ciclo de monitoreo
+│   ├── db.py                 # Conector y cliente de persistencia en Supabase
 │   ├── analyzer.py           # Motor de reglas climáticas (CAPE, WMO, ráfagas)
-│   ├── fetcher.py            # Cliente HTTP para Open-Meteo
+│   ├── fetcher.py            # Cliente HTTP para Open-Meteo API
 │   ├── notifier.py           # Bot notificador de Telegram
-│   ├── config.py             # Carga de variables de entorno y coordenadas
+│   ├── config.py             # Carga de variables de entorno y coordenadas fijas
 │   ├── schemas.py            # Modelos de datos Pydantic
 │   ├── requirements.txt      # Dependencias de Python
+│   ├── .env.example          # Plantilla de variables de entorno del backend
 │   └── .env                  # Variables privadas de producción (¡No se sube a Git!)
 │
-├── frontend/                 # ⚛️ Aplicación Web Dashboard en React (Vite)
-│   ├── src/
-│   │   ├── App.jsx           # Dashboard principal con previsiones a 24h y buscador
-│   │   ├── index.css         # Estilos visuales en modo oscuro y glassmorphic
-│   │   └── supabaseClient.js # Cliente JS de Supabase
-│   ├── .env.local            # Credenciales públicas de Vite (¡No se sube a Git!)
-│   └── package.json
-│
-├── .github/
-│   └── workflows/
-│       └── cron.yml          # GitHub Actions (Desactivado por defecto)
-│
-├── supabase_schema.sql       # Script SQL para tablas, índices y políticas RLS
-└── PLANIFICACION_WEB.md      # Planificación de fases y desarrollo
+└── frontend/                 # ⚛️ Aplicación Web Dashboard en React (Vite)
+    ├── src/
+    │   ├── App.jsx           # Dashboard principal (Estado global, vistas y tabs)
+    │   ├── index.css         # Sistema de diseño, temas visuales y glassmorphism
+    │   ├── supabaseClient.js # Cliente JS de Supabase
+    │   └── components/       # Componentes del Dashboard
+    │       ├── Header.jsx        # Encabezado con estado del sistema y selector de vistas
+    │       ├── SearchBar.jsx     # Buscador interactivo de localidades (Geocodificación)
+    │       ├── LocationCard.jsx  # Tarjeta de clima actual y previsiones por zona
+    │       ├── Forecast24h.jsx   # Carrusel horario de pronóstico de 24 horas
+    │       ├── HourlyCard.jsx    # Tarjeta de cada hora con brújula de viento
+    │       ├── Banners.jsx       # Banners de estado de alertas meteorológicas
+    │       ├── AlertsTable.jsx   # Tabla histórica de eventos MODERATE / SEVERE
+    │       └── HistoryTable.jsx  # Historial continuo de mediciones
+    ├── .env.local            # Credenciales de Vite para Supabase (¡No se sube a Git!)
+    └── package.json
 ```
 
 ---
 
-## 🔒 Seguridad y Manejo de Claves (`.gitignore`)
+## 🔒 Seguridad y Variables de Entorno
 
-Todas las claves privadas y archivos con credenciales se encuentran totalmente protegidos e ignorados por Git a través de [.gitignore](file:///.gitignore):
+Todas las claves privadas y archivos sensibles están protegidos mediante `.gitignore`:
 
-- `backend/.env`: Almacena `SUPABASE_SERVICE_ROLE_KEY`, `TELEGRAM_TOKEN`, y `TELEGRAM_CHAT_ID`.
-- `frontend/.env.local`: Almacena `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` (pública de solo lectura).
+### Backend (`backend/.env`)
+Crea un archivo `.env` en la carpeta `backend/` basado en `backend/.env.example`:
 
-> **Nota de Seguridad:** Ninguna clave se subirá jamás a GitHub.
+```env
+TELEGRAM_TOKEN=tu_token_aqui
+TELEGRAM_CHAT_ID=tu_chat_id_aqui
+ENABLE_TELEGRAM=true
+
+SUPABASE_URL=https://tu-proyecto.supabase.co
+SUPABASE_ANON_KEY=tu_anon_key_aqui
+SUPABASE_SERVICE_ROLE_KEY=tu_service_role_key_aqui
+```
+
+### Frontend (`frontend/.env.local`)
+Crea un archivo `.env.local` en la carpeta `frontend/`:
+
+```env
+VITE_SUPABASE_URL=https://tu-proyecto.supabase.co
+VITE_SUPABASE_ANON_KEY=tu_anon_key_aqui
+```
 
 ---
 
-## 🚀 Guía de Uso Local
+## 🗄️ Configuración de la Base de Datos (Supabase)
 
-### 1. Backend (Python)
-Para ejecutar el monitoreo y enviar registros a Supabase desde tu computadora:
+1. Ingresa a tu proyecto en **Supabase**.
+2. Ve al **SQL Editor**.
+3. Copia y ejecuta el contenido del archivo [`supabase_schema.sql`](file:///c:/Users/Lucas/Desktop/Meteorologia/ClimaAlert/supabase_schema.sql).
+4. El script creará automáticamente:
+   - Tabla `mediciones` (historial meteorológico).
+   - Tabla `alertas` (registro de alertas severas o moderadas).
+   - Políticas RLS (Row Level Security) para acceso anónimo de lectura.
+
+---
+
+## 🚀 Guía de Instalación y Ejecución Local
+
+### 1. Preparación del Entorno Virtual de Python (`venv`)
+
+Desde la raíz del proyecto (`ClimaAlert/`), crea e instala el entorno virtual para el Backend:
 
 ```bash
-# 1. Ingresar a la carpeta backend
+# Crear el entorno virtual en la raíz del proyecto
+python -m venv venv
+
+# Activar el entorno virtual
+# En Windows (CMD / PowerShell):
+venv\Scripts\activate
+
+# En Linux / macOS:
+source venv/bin/activate
+
+# Instalar las dependencias de Python del Backend
+pip install -r backend/requirements.txt
+```
+
+---
+
+### 2. Opciones de Ejecución
+
+Puedes iniciar el proyecto de cualquiera de las siguientes formas:
+
+#### Opción 1: Ejecución Simultánea (Recomendada con `npm`)
+
+Desde la raíz del proyecto, ejecuta:
+
+```bash
+# Instalar dependencias del frontend y raíz
+npm install
+cd frontend && npm install && cd ..
+
+# Iniciar Frontend y Backend al mismo tiempo
+npm run dev
+```
+
+Comandos individuales desde la raíz:
+- `npm run dev:front`: Inicia únicamente el Dashboard web.
+- `npm run dev:back`: Inicia únicamente el servicio Python del Backend.
+
+#### Opción 2: Lanzador Automático en Windows (`start.bat`)
+
+Si estás en Windows y ya creaste el `venv` en la raíz, puedes hacer doble clic en [`start.bat`](file:///c:/Users/Lucas/Desktop/Meteorologia/ClimaAlert/start.bat) o ejecutarlo desde la terminal:
+
+```cmd
+start.bat
+```
+
+Esto abrirá automáticamente dos ventanas independientes: una para el servidor Vite (Frontend) y otra para el monitoreo en Python (Backend).
+
+#### Opción 3: Ejecución Manual Separada
+
+##### 1. Backend (Python)
+```bash
+# Desde la raíz (o ingresando a backend/)
+venv\Scripts\activate          # En Windows
+# source venv/bin/activate     # En Linux/macOS
+
 cd backend
-
-# 2. Asegurarse de tener instalado requirements.txt
-pip install -r requirements.txt
-
-# 3. Ejecutar el monitoreo
 python main.py
 ```
 
-### 2. Frontend Web (React + Vite)
-Para levantar el servidor de desarrollo web:
-
+##### 2. Frontend (React + Vite)
 ```bash
-# 1. Ingresar a la carpeta frontend
 cd frontend
-
-# 2. Instalar dependencias (si no lo hiciste antes)
 npm install
-
-# 3. Iniciar el servidor local
 npm run dev
 ```
-Abre el navegador en `http://localhost:5173`. Para detener el servidor presiona `Ctrl + C`.
+Abre tu navegador en `http://localhost:5173`.
 
 ---
 
-## 🌟 Características del Dashboard Web
+## 🌟 Características Destacadas del Dashboard
 
-1. **Previsiones a 24 Horas**: Carrusel horario interactivo con temperatura, probabilidad de lluvia, volumen proyectado (mm) y brújula con flecha rotada según la dirección del viento.
-2. **Resaltado de Hora Actual ("AHORA")**: La hora en curso se destaca visualmente con una tarjeta azul neón.
-3. **Buscador de Zonas en Tiempo Real**: Permite buscar cualquier localidad (ej. Palermo, Belgrano, Quilmes, Córdoba, Rosario) para ver su clima y pronóstico de 24 horas instantáneamente.
-4. **Monitoreo por Ubicación**: Tarjetas en vivo para Valentín Alsina, La Boca y Puerto Madero con datos servidos desde Supabase.
-5. **Historial de Alertas & Registros**: Tablas completas para auditoría de eventos `MODERATE` y `SEVERE`.
+1. **Previsiones a 24 Horas con Brújula de Viento**: Carrusel interactivo con temperatura, probabilidad de lluvia, volumen proyectado (mm) y rotación dinámica del viento según los grados (°).
+2. **Resaltado de Hora Actual ("AHORA")**: La hora en curso se destaca automáticamente con un diseño neón distintivo.
+3. **Buscador de Zonas en Tiempo Real**: Permite buscar cualquier localidad del mundo (ej. Palermo, Belgrano, Córdoba, Madrid) para consultar el clima y su pronóstico al instante mediante geocodificación.
+4. **Monitoreo Por Zonas**: Vistas en tiempo real para Valentín Alsina, La Boca y Puerto Madero servidas directamente desde Supabase.
+5. **Historial & Registro de Alertas**: Tablas interactivas para auditar eventos severos y mediciones históricas.
 
 ---
 
-## ☁️ Despliegue en la Nube (GitHub Actions)
+## ☁️ Despliegue Automatizado (GitHub Actions)
 
-El repositorio cuenta con un flujo automatizado en [.github/workflows/cron.yml](file:///.github/workflows/cron.yml).
+El repositorio incluye un flujo en [.github/workflows/cron.yml](file:///.github/workflows/cron.yml) para ejecutar el monitoreo automáticamente cada 15 minutos en la nube.
 
-> ⚠️ **IMPORTANTE:** La ejecución automática viene **DESACTIVADA POR DEFECTO** (la sección `schedule: cron` está comentada).
-> Puedes hacer `push` o subir el código a GitHub **sin temor a que se ejecute solo o gaste minutos de GitHub Actions**.
-
-### ¿Cómo activarlo en el futuro cuando desees ejecutarlo 24/7?
-1. Sube tu código a tu repositorio de GitHub.
-2. Ve a **Settings > Secrets and variables > Actions** en GitHub y agrega los Secrets:
+Para activarlo:
+1. Sube el código a GitHub.
+2. Agrega los secrets en **Settings > Secrets and variables > Actions**:
    - `SUPABASE_URL`
    - `SUPABASE_SERVICE_ROLE_KEY`
    - `SUPABASE_ANON_KEY`
    - `TELEGRAM_TOKEN`
    - `TELEGRAM_CHAT_ID`
-3. En [.github/workflows/cron.yml](file:///.github/workflows/cron.yml), descomenta las líneas 5 y 6 (`schedule` y `- cron: '*/15 * * * *'`).
-4. Realiza el commit y push. ¡A partir de ese instante correrá solo cada 15 minutos!
+3. En `.github/workflows/cron.yml`, descomenta la sección `schedule`.
+
