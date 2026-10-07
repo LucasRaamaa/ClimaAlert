@@ -33,8 +33,8 @@ ClimaAlert/
 │   ├── config.py             # Carga de variables de entorno y coordenadas fijas
 │   ├── schemas.py            # Modelos de datos Pydantic
 │   ├── requirements.txt      # Dependencias de Python
-│   ├── .env.example          # Plantilla de variables de entorno del backend
-│   └── .env                  # Variables privadas de producción (¡No se sube a Git!)
+│   
+│   
 │
 └── frontend/                 # ⚛️ Aplicación Web Dashboard en React (Vite)
     ├── src/
@@ -50,7 +50,6 @@ ClimaAlert/
     │       ├── Banners.jsx       # Banners de estado de alertas meteorológicas
     │       ├── AlertsTable.jsx   # Tabla histórica de eventos MODERATE / SEVERE
     │       └── HistoryTable.jsx  # Historial continuo de mediciones
-    ├── .env.local            # Credenciales de Vite para Supabase (¡No se sube a Git!)
     └── package.json
 ```
 
