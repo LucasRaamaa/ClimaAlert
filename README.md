@@ -22,7 +22,6 @@ ClimaAlert/
 ├── package.json              # Script raíz para ejecución simultánea (concurrently)
 ├── start.bat                 # Lanzador automático de un clic para Windows
 ├── supabase_schema.sql       # Script SQL para tablas, índices y políticas RLS
-├── PLANIFICACION_WEB.md      # Planificación de fases y hoja de ruta
 │
 ├── backend/                  # 🐍 Backend & Worker en Python
 │   ├── main.py               # Ejecutor principal del ciclo de monitoreo
@@ -33,8 +32,8 @@ ClimaAlert/
 │   ├── config.py             # Carga de variables de entorno y coordenadas fijas
 │   ├── schemas.py            # Modelos de datos Pydantic
 │   ├── requirements.txt      # Dependencias de Python
-│   ├── .env.example          # Plantilla de variables de entorno del backend
-│   └── .env                  # Variables privadas de producción (¡No se sube a Git!)
+│   └── .env.example          # Plantilla de variables de entorno del backend
+│   
 │
 └── frontend/                 # ⚛️ Aplicación Web Dashboard en React (Vite)
     ├── src/
@@ -50,7 +49,7 @@ ClimaAlert/
     │       ├── Banners.jsx       # Banners de estado de alertas meteorológicas
     │       ├── AlertsTable.jsx   # Tabla histórica de eventos MODERATE / SEVERE
     │       └── HistoryTable.jsx  # Historial continuo de mediciones
-    ├── .env.local            # Credenciales de Vite para Supabase (¡No se sube a Git!)
+    ├── .env.local            # Credenciales de Vite para Supabase 
     └── package.json
 ```
 
@@ -87,7 +86,7 @@ VITE_SUPABASE_ANON_KEY=tu_anon_key_aqui
 
 1. Ingresa a tu proyecto en **Supabase**.
 2. Ve al **SQL Editor**.
-3. Copia y ejecuta el contenido del archivo [`supabase_schema.sql`](file:///c:/Users/Lucas/Desktop/Meteorologia/ClimaAlert/supabase_schema.sql).
+3. Copia y ejecuta el contenido del archivo 
 4. El script creará automáticamente:
    - Tabla `mediciones` (historial meteorológico).
    - Tabla `alertas` (registro de alertas severas o moderadas).
